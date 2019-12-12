@@ -8,6 +8,9 @@ on:
   # Run tests for any PRs.
   pull_request:
 
+env:
+  IMAGE_NAME: runner
+
 name: Build
 jobs:
   test:
@@ -33,6 +36,7 @@ jobs:
   # Push image to GitHub Package Registry.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
+    name: Push
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -44,7 +48,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: Push image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}
           IMAGE_ID=$(echo "$IMAGE_ID" | tr '[:upper:]' '[:lower:]')
 
           # Strip git ref prefix from version
