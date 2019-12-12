@@ -1,8 +1,18 @@
-on: [push]
+on:
+  push:
+    branches:
+      - master
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+  # Run tests for any PRs.
+  pull_request:
+
+name: Build
 jobs:
-  build:
-    runs-on: ubuntu-16.04
-    name: Build
+  test:
+    runs-on: ubuntu-latest
+    name: Test
     steps:
       - uses: actions/checkout@master
       - id: gocache
@@ -17,7 +27,36 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: '1.13.4'
-      - name: Test
+      - name: Go Test
         run: go test -v .
-      - name: Build
-        run: go build .
+
+  # Push image to GitHub Package Registry.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker Build
+        run: docker build . --file Dockerfile --tag image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - name: Push image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag image $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
