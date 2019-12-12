@@ -1,0 +1,19 @@
+name: 'Milestone Schedule'
+description: 'Creates Issue Milestones in a GitHub repository, according to an iCalendar (RFC 5545) Recurrence schedule.'
+author: 'MrGossett'
+inputs:
+  recurrence:
+    description: 'The RFC 5545 Recurrence pattern defining a schedule of Milestone due dates'
+    required: true
+  count:
+    description: 'The number of upcoming milestones that should be created each run'
+    required: true
+  format:
+    description: "A format string as specified in Golang's `time` package used to determine each Milestone's title. (defaults to `2006-01-02`)"
+    required: false
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: 'archive'
+  color: 'gray-dark'
