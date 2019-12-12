@@ -24,6 +24,8 @@ _defaults to `2006-01-02`_
 
 ```yaml
 uses: MrGossett/github-action-milestone-schedule@v1
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 with:
   recurrence: 'FREQ=WEEKLY;BYDAY=FR;DTSTART=20191211T220000Z'
   format: 'Due 2006-Jan-02'
